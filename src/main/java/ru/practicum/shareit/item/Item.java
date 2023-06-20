@@ -1,10 +1,12 @@
 package ru.practicum.shareit.item;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.User;
 
-@Data
+@Getter
+@Setter
 public class Item {
     private Long id;
     private String name;

@@ -10,7 +10,11 @@ public interface ItemMapper {
     @Mapping(target = "name", source = "entity.name")
     @Mapping(target = "description", source = "entity.description")
     @Mapping(target = "available", source = "entity.available")
-    @Mapping(target = "owner", source = "entity.owner")
-    @Mapping(target = "request", source = "entity.request")
     Item itemDtoToItem(ItemDto entity);
+
+    @Mapping(target = "id", source = "entity.id")
+    @Mapping(target = "name", source = "entity.name")
+    @Mapping(target = "description", source = "entity.description")
+    @Mapping(target = "available", source = "entity.available")
+    ItemDto itemToItemDto(Item entity);
 }

@@ -5,24 +5,24 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.exception.DataNotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 @Slf4j
 public class ItemRepositoryImpl implements ItemRepository {
-    private final HashMap<Long, Item> items = new HashMap();
+    private final Map<Long, Item> items = new HashMap();
     private long itemId = 1;
 
     @Override
     public Item findById(long itemId) {
+
         return items.get(itemId);
     }
 
     @Override
     public List<Item> findAllByUserId(long userId) {
-        ArrayList<Item> itemArrayList = new ArrayList<>();
+        List<Item> itemArrayList = new ArrayList<>();
         for (Item item : items.values()) {
             if (item.getOwner().getId() == userId) {
                 itemArrayList.add(item);
@@ -34,6 +34,7 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     @Override
     public Item save(Item item) {
+        validateWithExceptions(item);
         item.setId(itemId++);
         items.put(item.getId(), item);
         log.info("Добавлен вещь с id = {}", item.getId());
@@ -51,8 +52,7 @@ public class ItemRepositoryImpl implements ItemRepository {
 
         item.setId(itemId);
         if (item.getName() == null) {
-            item.setName(items.get(itemId).getName());
-            ; // присвоить старое значение, если новое не задано
+            item.setName(items.get(itemId).getName()); // присвоить старое значение, если новое не задано
         }
         if (item.getDescription() == null) {
             item.setDescription(items.get(itemId).getDescription());
@@ -70,16 +70,32 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     @Override
     public List<Item> search(String text) {
-        ArrayList<Item> itemArrayList = new ArrayList<>();
+        //если сообщение для поиска пустое, то вернуть пустой список
         if (text.isEmpty()) {
-            return itemArrayList;
+            return new ArrayList<>();
         }
-        text = text.toLowerCase();
-        for (Item item : items.values()) {
-            if (item.getAvailable() && (item.getName().toLowerCase().contains(text) || item.getDescription().toLowerCase().contains(text))) {
-                itemArrayList.add(item);
-            }
+
+        return items.values().stream()
+                .filter(item -> isSearched(item, text.toLowerCase(Locale.ENGLISH)))
+                .collect(Collectors.toList());
+    }
+
+    private boolean isSearched(Item item, String text) {
+        boolean available = item.getAvailable();
+        String name = item.getName().toLowerCase();
+        String description = item.getDescription().toLowerCase();
+        return available && (name.contains(text) || description.contains(text));
+    }
+
+    private void validateWithExceptions(Item item) {
+        if (item.getOwner() == null) {
+            throw new DataNotFoundException("Пользователь не найден");
         }
-        return itemArrayList;
+        if (item.getAvailable() == null || item.getName() == null || item.getDescription() == null) {
+            throw new ValidationException("Ошибка валидации нового предмета");
+        }
+        if (item.getName().isEmpty() || item.getDescription().isEmpty()) {
+            throw new ValidationException("Ошибка валидации нового предмета");
+        }
     }
 }

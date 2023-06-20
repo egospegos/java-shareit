@@ -1,11 +1,12 @@
 package ru.practicum.shareit.item;
 
+import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.DataNotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,43 +21,52 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Item get(long itemId) {
+    public ItemDto get(long itemId) {
         validateId(itemId);
-        return itemRepository.findById(itemId);
+        //маппинг
+        ItemMapper mapper = Mappers.getMapper(ItemMapper.class);
+        return mapper.itemToItemDto(itemRepository.findById(itemId));
     }
 
     @Override
-    public List<Item> getAllByUserId(long userId) {
-        return itemRepository.findAllByUserId(userId);
+    public List<ItemDto> getAllByUserId(long userId) {
+        List<Item> itemsFromRepo = itemRepository.findAllByUserId(userId);
+        List<ItemDto> itemsDto = new ArrayList<>();
+        //маппинг
+        ItemMapper mapper = Mappers.getMapper(ItemMapper.class);
+        for (Item item : itemsFromRepo) {
+            itemsDto.add(mapper.itemToItemDto(item));
+        }
+        return itemsDto;
     }
 
     @Override
-    public Item addNewItem(long userId, Item item) {
+    public Item addNewItem(long userId, ItemDto itemDto) {
+        //маппинг
+        ItemMapper mapper = Mappers.getMapper(ItemMapper.class);
+        Item item = mapper.itemDtoToItem(itemDto);
         item.setOwner(userRepository.findById(userId));
-        validateWithExceptions(item);
         return itemRepository.save(item);
     }
 
     @Override
-    public Item update(long userId, long itemId, Item item) {
+    public Item update(long userId, long itemId, ItemDto itemDto) {
+        //маппинг
+        ItemMapper mapper = Mappers.getMapper(ItemMapper.class);
+        Item item = mapper.itemDtoToItem(itemDto);
         return itemRepository.update(userId, itemId, item);
     }
 
     @Override
-    public List<Item> searchItems(String text) {
-        return itemRepository.search(text);
-    }
-
-    private void validateWithExceptions(Item item) {
-        if (item.getOwner() == null) {
-            throw new DataNotFoundException("Пользователь не найден");
+    public List<ItemDto> searchItems(String text) {
+        List<Item> itemsFromRepo = itemRepository.search(text); //поиск вещей
+        //маппинг
+        List<ItemDto> itemsDto = new ArrayList<>();
+        ItemMapper mapper = Mappers.getMapper(ItemMapper.class);
+        for (Item item : itemsFromRepo) {
+            itemsDto.add(mapper.itemToItemDto(item));
         }
-        if (item.getAvailable() == null || item.getName() == null || item.getDescription() == null) {
-            throw new ValidationException("Ошибка валидации нового предмета");
-        }
-        if (item.getName().isEmpty() || item.getDescription().isEmpty()) {
-            throw new ValidationException("Ошибка валидации нового предмета");
-        }
+        return itemsDto;
     }
 
     private void validateId(Long id) {

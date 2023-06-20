@@ -1,8 +1,11 @@
 package ru.practicum.shareit.user;
 
-import lombok.Data;
 
-@Data
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class User {
 
     private Long id;
