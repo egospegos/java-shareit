@@ -27,13 +27,13 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemDtoWithBookings> getAllByUserId(@RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.getAllByUserId(userId);
     }
 
     @GetMapping("/{id}")
-    public ItemDto get(@PathVariable long id) {
-        return itemService.get(id);
+    public ItemDtoWithBookings getItem(@RequestHeader(value = "X-Sharer-User-Id", defaultValue = "-1") Long userId, @PathVariable long id) {
+        return itemService.get(id, userId);
     }
 
     @PatchMapping("/{itemId}")
@@ -46,5 +46,12 @@ public class ItemController {
     @GetMapping("/search")
     public List<ItemDto> search(@RequestParam String text) {
         return itemService.searchItems(text);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    @Validated({Marker.OnCreate.class})
+    public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                 @PathVariable long itemId, @RequestBody @Valid Comment comment) {
+        return itemService.addComment(userId, itemId, comment);
     }
 }

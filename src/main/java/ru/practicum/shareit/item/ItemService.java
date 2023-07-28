@@ -5,11 +5,13 @@ import java.util.List;
 public interface ItemService {
     Item addNewItem(long userId, ItemDto itemDto);
 
-    ItemDto get(long itemId);
+    ItemDtoWithBookings get(long itemId, long userId);
 
-    List<ItemDto> getAllByUserId(long userId);
+    List<ItemDtoWithBookings> getAllByUserId(long userId);
 
     Item update(long userId, long itemId, ItemDto itemDto);
 
     List<ItemDto> searchItems(String text);
+
+    CommentDto addComment(long userId, long itemId, Comment comment);
 }
