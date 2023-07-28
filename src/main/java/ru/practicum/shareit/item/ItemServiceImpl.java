@@ -194,8 +194,8 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    private void validateUserId(Long itemId, Long userId) {
-        if (itemRepository.findById(itemId).get().getOwner().getId() != userId) {
+    private void validateUserId(long itemId, long userId) {
+        if (itemRepository.findById(itemId).getOwner().getId() != userId) {
             throw new DataNotFoundException("id пользователя: " + userId + " не совпадает с владельцем");
         }
     }
