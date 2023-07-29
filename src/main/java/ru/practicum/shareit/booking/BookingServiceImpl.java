@@ -1,33 +1,32 @@
 package ru.practicum.shareit.booking;
 
+import lombok.RequiredArgsConstructor;
 import org.mapstruct.factory.Mappers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.DataNotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.Item;
+import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.ItemRepository;
+import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.UserRepository;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional
+@RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
 
-    @Autowired
-    public BookingServiceImpl(BookingRepository bookingRepository,
-                              ItemRepository itemRepository, UserRepository userRepository) {
-        this.bookingRepository = bookingRepository;
-        this.itemRepository = itemRepository;
-        this.userRepository = userRepository;
-    }
 
     @Override
-    public Booking addNewBooking(long userId, BookingDto bookingDto) {
+    public BookingDto addNewBooking(long userId, BookingDto bookingDto) {
         validateItemId(bookingDto.getItemId());
         Item item = itemRepository.findById(bookingDto.getItemId());
         validateItem(item);
@@ -37,17 +36,25 @@ public class BookingServiceImpl implements BookingService {
             throw new DataNotFoundException("Владелец и арендатор один и тот же пользователь с id = " + userId);
         }
 
+        //маппинг перед добавлением
         BookingMapper mapper = Mappers.getMapper(BookingMapper.class);
         Booking booking = mapper.bookingDtoToBooking(bookingDto);
 
         booking.setStatus(Status.WAITING);
         booking.setBooker(userRepository.findById(userId));
         booking.setItem(item);
-        return bookingRepository.save(booking);
+
+        bookingRepository.save(booking);
+
+        //маппинг перед отправкой на контролер
+        bookingDto = mapper.bookingToBookingDto(booking);
+        bookingDto.setItem(Mappers.getMapper(ItemMapper.class).itemToItemForBookingDto(booking.getItem()));
+        bookingDto.setBooker(Mappers.getMapper(UserMapper.class).userToUserForBookingDto(booking.getBooker()));
+        return bookingDto;
     }
 
     @Override
-    public Booking setApproved(long userId, long bookingId, boolean approved) {
+    public BookingDto setApproved(long userId, long bookingId, boolean approved) {
         Booking booking = bookingRepository.findById(bookingId);
         if (booking.getBooker().getId() == userId) {
             throw new DataNotFoundException("Арендатор не может сменить статус сменить статус");
@@ -59,18 +66,26 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getStatus().equals(Status.APPROVED) && approved == true) {
             throw new ValidationException("Статус APPROVED уже назначен");
         }
-        if (approved == true) {
+        if (approved) {
             booking.setStatus(Status.APPROVED);
         }
-        if (approved == false) {
+        if (!approved) {
             booking.setStatus(Status.REJECTED);
         }
 
-        return bookingRepository.save(booking);
+        bookingRepository.save(booking);
+
+        //маппинг перед отправкой на контролер
+        BookingMapper mapper = Mappers.getMapper(BookingMapper.class);
+        BookingDto bookingDto = mapper.bookingToBookingDto(booking);
+        bookingDto.setItem(Mappers.getMapper(ItemMapper.class).itemToItemForBookingDto(booking.getItem()));
+        bookingDto.setBooker(Mappers.getMapper(UserMapper.class).userToUserForBookingDto(booking.getBooker()));
+
+        return bookingDto;
     }
 
     @Override
-    public Booking getBooking(long userId, long bookingId) {
+    public BookingDto getBooking(long userId, long bookingId) {
         validateBookingId(bookingId);
         validateUserId(userId);
         Booking booking = bookingRepository.findById(bookingId);
@@ -78,65 +93,91 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getItem().getOwner().getId() != userId && booking.getBooker().getId() != userId) {
             throw new DataNotFoundException("Неверный id арендатора или владельца");
         }
-        return booking;
+
+        //маппинг
+        BookingMapper mapper = Mappers.getMapper(BookingMapper.class);
+        BookingDto bookingDto = mapper.bookingToBookingDto(booking);
+        bookingDto.setItem(Mappers.getMapper(ItemMapper.class).itemToItemForBookingDto(booking.getItem()));
+        bookingDto.setBooker(Mappers.getMapper(UserMapper.class).userToUserForBookingDto(booking.getBooker()));
+
+        return bookingDto;
     }
 
     @Override
-    public List<Booking> getAllByUserId(long userId, String state) {
+    public List<BookingDto> getAllByUserId(long userId, String state) {
 
         validateUserId(userId);
         validateState(state);
+
+        List<Booking> bookings = new ArrayList<>();
         if (state.equals("ALL")) {
-            return bookingRepository.findAllByBookerId(userId);
+            bookings = bookingRepository.findAllByBookerId(userId);
         }
         if (state.equals("CURRENT")) {
-            return bookingRepository.findCurrentByBookerId(userId);
+            bookings = bookingRepository.findCurrentByBookerId(userId);
         }
         if (state.equals("PAST")) {
-
-            return bookingRepository.findPastByBookerId(userId);
+            bookings = bookingRepository.findPastByBookerId(userId);
         }
         if (state.equals("FUTURE")) {
-            return bookingRepository.findFutureByBookerId(userId);
+            bookings = bookingRepository.findFutureByBookerId(userId);
         }
         if (state.equals("REJECTED")) {
 
-            return bookingRepository.findRejectedByBookerId(userId);
+            bookings = bookingRepository.findRejectedByBookerId(userId);
         }
         if (state.equals("WAITING")) {
-
-            return bookingRepository.findWaitingByBookerId(userId);
+            bookings = bookingRepository.findWaitingByBookerId(userId);
         }
 
-        return null;
+        BookingMapper mapper = Mappers.getMapper(BookingMapper.class);
+        List<BookingDto> bookingsDto = new ArrayList<>();
+        for (Booking booking : bookings) {
+            BookingDto bookingDto = mapper.bookingToBookingDto(booking);
+            bookingDto.setItem(Mappers.getMapper(ItemMapper.class).itemToItemForBookingDto(booking.getItem()));
+            bookingDto.setBooker(Mappers.getMapper(UserMapper.class).userToUserForBookingDto(booking.getBooker()));
+            bookingsDto.add(bookingDto);
+        }
+
+        return bookingsDto;
     }
 
     @Override
-    public List<Booking> getAllByOwnerId(long ownerId, String state) {
+    public List<BookingDto> getAllByOwnerId(long ownerId, String state) {
 
         validateUserId(ownerId);
         validateState(state);
+
+        List<Booking> bookings = new ArrayList<>();
         if (state.equals("ALL")) {
-            return bookingRepository.findAllByOwnerId(ownerId);
+            bookings = bookingRepository.findAllByOwnerId(ownerId);
         }
         if (state.equals("CURRENT")) {
-            return bookingRepository.findCurrentByOwnerId(ownerId);
+            bookings = bookingRepository.findCurrentByOwnerId(ownerId);
         }
         if (state.equals("PAST")) {
-            return bookingRepository.findPastByOwnerId(ownerId);
+            bookings = bookingRepository.findPastByOwnerId(ownerId);
         }
         if (state.equals("FUTURE")) {
-            return bookingRepository.findFutureByOwnerId(ownerId);
+            bookings = bookingRepository.findFutureByOwnerId(ownerId);
         }
         if (state.equals("REJECTED")) {
-
-            return bookingRepository.findRejectedByOwnerId(ownerId);
+            bookings = bookingRepository.findRejectedByOwnerId(ownerId);
         }
         if (state.equals("WAITING")) {
-            return bookingRepository.findWaitingByOwnerId(ownerId);
+            bookings = bookingRepository.findWaitingByOwnerId(ownerId);
         }
 
-        return null;
+        BookingMapper mapper = Mappers.getMapper(BookingMapper.class);
+        List<BookingDto> bookingsDto = new ArrayList<>();
+        for (Booking booking : bookings) {
+            BookingDto bookingDto = mapper.bookingToBookingDto(booking);
+            bookingDto.setItem(Mappers.getMapper(ItemMapper.class).itemToItemForBookingDto(booking.getItem()));
+            bookingDto.setBooker(Mappers.getMapper(UserMapper.class).userToUserForBookingDto(booking.getBooker()));
+            bookingsDto.add(bookingDto);
+        }
+
+        return bookingsDto;
     }
 
     private void validateItem(Item item) {

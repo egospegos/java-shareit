@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
@@ -41,12 +42,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User create(UserDto userDto) {
+    public UserDto create(UserDto userDto) {
         //маппинг
         UserMapper mapper = Mappers.getMapper(UserMapper.class);
         User user = mapper.userDtoToUser(userDto);
         try {
-            return userRepository.save(user);
+            return mapper.userToUserDto(userRepository.save(user));
         } catch (ConstraintViolationException e) {
             throw new DublicateException(String.format(
                     "Пользователь с %s уже зарегистрирован", user.getEmail()
@@ -57,7 +58,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User update(long id, UserDto userDto) {
+    public UserDto update(long id, UserDto userDto) {
         validateId(id); // проверка, есть ли юзер по такому ид
         userDto.setId(id);
         if (userDto.getEmail() == null) {
@@ -71,7 +72,7 @@ public class UserServiceImpl implements UserService {
         User user = mapper.userDtoToUser(userDto);
         validateId(id);
         validateWithExceptionsOnUpdate(id, user);
-        return userRepository.save(user);
+        return mapper.userToUserDto(userRepository.save(user));
     }
 
     @Override

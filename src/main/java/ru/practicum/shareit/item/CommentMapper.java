@@ -10,4 +10,8 @@ public interface CommentMapper {
     @Mapping(target = "authorName", expression = "java(entity.getAuthor().getName())")
     @Mapping(target = "created", source = "entity.created")
     CommentDto commentToCommentDto(Comment entity);
+
+
+    @Mapping(target = "text", source = "entity.text")
+    Comment commentDtoToComment(CommentDto entity);
 }

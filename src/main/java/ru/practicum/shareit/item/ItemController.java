@@ -21,8 +21,8 @@ public class ItemController {
 
     @PostMapping
     @Validated({Marker.OnCreate.class})
-    public Item add(@RequestHeader("X-Sharer-User-Id") Long userId,
-                    @Valid @RequestBody ItemDto itemDto) {
+    public ItemDto add(@RequestHeader("X-Sharer-User-Id") Long userId,
+                       @Valid @RequestBody ItemDto itemDto) {
         return itemService.addNewItem(userId, itemDto);
     }
 
@@ -38,8 +38,8 @@ public class ItemController {
 
     @PatchMapping("/{itemId}")
     @Validated({Marker.OnUpdate.class})
-    public Item update(@RequestHeader("X-Sharer-User-Id") Long userId,
-                       @PathVariable long itemId, @RequestBody @Valid ItemDto itemDto) {
+    public ItemDto update(@RequestHeader("X-Sharer-User-Id") Long userId,
+                          @PathVariable long itemId, @RequestBody @Valid ItemDto itemDto) {
         return itemService.update(userId, itemId, itemDto);
     }
 
@@ -51,7 +51,7 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     @Validated({Marker.OnCreate.class})
     public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                 @PathVariable long itemId, @RequestBody @Valid Comment comment) {
-        return itemService.addComment(userId, itemId, comment);
+                                 @PathVariable long itemId, @RequestBody @Valid CommentDto commentDto) {
+        return itemService.addComment(userId, itemId, commentDto);
     }
 }

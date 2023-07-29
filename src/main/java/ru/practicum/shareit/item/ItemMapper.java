@@ -23,4 +23,8 @@ public interface ItemMapper {
     @Mapping(target = "description", source = "entity.description")
     @Mapping(target = "available", source = "entity.available")
     ItemDtoWithBookings itemToItemDtoWithBookings(Item entity);
+
+    @Mapping(target = "id", source = "entity.id")
+    @Mapping(target = "name", source = "entity.name")
+    ItemForBookingDto itemToItemForBookingDto(Item entity);
 }

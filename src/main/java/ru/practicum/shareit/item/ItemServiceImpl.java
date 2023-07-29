@@ -1,7 +1,7 @@
 package ru.practicum.shareit.item;
 
+import lombok.RequiredArgsConstructor;
 import org.mapstruct.factory.Mappers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingMapper;
@@ -10,25 +10,20 @@ import ru.practicum.shareit.exception.DataNotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.UserRepository;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional
+@RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
 
-    @Autowired
-    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository,
-                           BookingRepository bookingRepository, CommentRepository commentRepository) {
-        this.itemRepository = itemRepository;
-        this.userRepository = userRepository;
-        this.bookingRepository = bookingRepository;
-        this.commentRepository = commentRepository;
-    }
 
     @Override
     public ItemDtoWithBookings get(long itemId, long userId) {
@@ -111,17 +106,21 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Item addNewItem(long userId, ItemDto itemDto) {
+    public ItemDto addNewItem(long userId, ItemDto itemDto) {
         //маппинг
         ItemMapper mapper = Mappers.getMapper(ItemMapper.class);
         Item item = mapper.itemDtoToItem(itemDto);
         item.setOwner(userRepository.findById(userId));
         validateWithExceptions(item);
-        return itemRepository.save(item);
+        itemRepository.save(item);
+
+        //маппинг перед отправкой на контроллер
+        return mapper.itemToItemDto(item);
+
     }
 
     @Override
-    public Item update(long userId, long itemId, ItemDto itemDto) {
+    public ItemDto update(long userId, long itemId, ItemDto itemDto) {
         validateItemId(itemId);
         validateUserId(itemId, userId);
         //маппинг
@@ -142,7 +141,9 @@ public class ItemServiceImpl implements ItemService {
         if (item.getOwner() == null) {
             item.setOwner(itemRepository.findById(itemId).getOwner());
         }
-        return itemRepository.save(item);
+        itemRepository.save(item);
+        //маппинг перед отправкой на контроллер
+        return mapper.itemToItemDto(item);
     }
 
     @Override
@@ -161,9 +162,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public CommentDto addComment(long userId, long itemId, Comment comment) {
+    public CommentDto addComment(long userId, long itemId, CommentDto commentDto) {
 
-        validateComment(comment);
         //есть ли такие бронирования, чтоб коммент оставить
         List<Booking> bookings = bookingRepository.findByItemIdAndUserId(itemId, userId);
         if (bookings.size() == 0) {
@@ -179,11 +179,14 @@ public class ItemServiceImpl implements ItemService {
         if (isBookingInFuture) {
             throw new ValidationException("Бронирование в будущем");
         }
+        //маппинг
+        CommentMapper mapper = Mappers.getMapper(CommentMapper.class);
+        Comment comment = mapper.commentDtoToComment(commentDto);
         comment.setItem(itemRepository.findById(itemId));
         comment.setAuthor(userRepository.findById(userId));
         comment.setCreated(LocalDateTime.now());
 
-        CommentMapper mapper = Mappers.getMapper(CommentMapper.class);
+        //маппинг перед отправкой назад
         return mapper.commentToCommentDto(commentRepository.save(comment));
 
     }
@@ -212,9 +215,4 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    private void validateComment(Comment comment) {
-        if (comment.getText().isEmpty()) {
-            throw new ValidationException("Ошибка валидации комментарий пустой");
-        }
-    }
 }
