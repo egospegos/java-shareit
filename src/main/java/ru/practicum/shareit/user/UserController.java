@@ -32,13 +32,13 @@ public class UserController {
 
     @PostMapping
     @Validated({Marker.OnCreate.class})
-    public User create(@RequestBody @Valid UserDto userDto) {
+    public UserDto create(@RequestBody @Valid UserDto userDto) {
         return userService.create(userDto);
     }
 
     @PatchMapping("/{id}")
     @Validated({Marker.OnUpdate.class})
-    public User update(@PathVariable long id, @RequestBody @Valid UserDto userDto) {
+    public UserDto update(@PathVariable long id, @RequestBody @Valid UserDto userDto) {
         return userService.update(id, userDto);
     }
 
