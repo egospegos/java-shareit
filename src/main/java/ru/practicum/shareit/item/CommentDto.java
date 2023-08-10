@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import ru.practicum.shareit.util.common.Marker;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 public class CommentDto {
     private int id;
     @NotBlank(groups = {Marker.OnCreate.class})

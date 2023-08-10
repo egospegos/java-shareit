@@ -1,12 +1,14 @@
 package ru.practicum.shareit.booking;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+
 
 import java.util.List;
 
-public interface BookingRepository extends JpaRepository<Booking, Long>, QuerydslPredicateExecutor<Booking> {
+public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query(value = " select b.id, b.start_date, b.end_date, b.item_id, b.booker_id, b.status from Bookings as b " +
             "where b.booker_id = ?1 order by b.start_date DESC", nativeQuery = true)
     List<Booking> findAllByBookerId(long bookerId);
@@ -80,6 +82,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long>, Queryds
     @Query(value = " select b.id, b.start_date, b.end_date, b.item_id, b.booker_id, b.status from Bookings as b " +
             "where b.item_id = ?1 AND b.booker_id = ?2 AND b.status != 'REJECTED' ", nativeQuery = true)
     List<Booking> findByItemIdAndUserId(long itemId, long userId);
+
+    @Query(value = " select b.id, b.start_date, b.end_date, b.item_id, b.booker_id, b.status from Bookings as b " +
+            "where b.booker_id = ?1 ", nativeQuery = true)
+    Page<Booking> findAllByBookerIdWithPagination(long bookerId, Pageable pageable);
+
+    @Query(value = " select b.* from Bookings as b " +
+            "INNER JOIN Items as i on b.item_id = i.id " +
+            "where i.owner_id = ?1 ", nativeQuery = true)
+    Page<Booking> findAllByOwnerIdWithPagination(long ownerId, Pageable pageable);
 
     Booking save(Booking booking);
 

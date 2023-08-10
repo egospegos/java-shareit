@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import ru.practicum.shareit.booking.BookingShort;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 public class ItemDtoWithBookings {
     private Long id;
     @NotBlank(groups = {Marker.OnCreate.class})
