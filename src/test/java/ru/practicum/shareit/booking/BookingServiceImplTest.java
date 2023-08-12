@@ -416,21 +416,6 @@ class BookingServiceImplTest {
 
     }
 
-    @Test
-    void getAllByUserId_WithoutPagination_StateAll() {
-        long userId = 1L;
-        String state = "ALL";
-        List<Booking> bookings = new ArrayList<>();
-        bookings.add(new Booking());
-
-        Mockito.when(userRepository.findById(Long.valueOf(userId))).thenReturn(Optional.of(new User()));
-        Mockito.when(bookingRepository.findAllByBookerId(userId)).thenReturn(bookings);
-
-        List<BookingDto> actualList = bookingService.getAllByUserId(userId, state, null, null);
-
-        Mockito.verify(bookingRepository).findAllByBookerId(userId);
-
-    }
 
     @Test
     void getAllByUserId_WithoutPagination_StateCurrent() {
@@ -521,6 +506,7 @@ class BookingServiceImplTest {
         bookings.add(new Booking());
         Page<Booking> bookingPage = new PageImpl<>(bookings);
 
+        Mockito.when(userRepository.findById(Long.valueOf(userId))).thenReturn(Optional.of(new User()));
         Mockito.when(bookingRepository.findAllByBookerIdWithPagination(userId, PageRequest.of(Math.toIntExact(start), Math.toIntExact(size), Sort.by("start_date").descending())))
                 .thenReturn(bookingPage);
 
@@ -534,21 +520,6 @@ class BookingServiceImplTest {
     void getAllByOwnerId() {
     }
 
-    @Test
-    void getAllByOwnerId_WithoutPagination_StateAll() {
-        long userId = 1L;
-        String state = "ALL";
-        List<Booking> bookings = new ArrayList<>();
-        bookings.add(new Booking());
-
-        Mockito.when(userRepository.findById(Long.valueOf(userId))).thenReturn(Optional.of(new User()));
-        Mockito.when(bookingRepository.findAllByOwnerId(userId)).thenReturn(bookings);
-
-        List<BookingDto> actualList = bookingService.getAllByOwnerId(userId, state, null, null);
-
-        Mockito.verify(bookingRepository).findAllByOwnerId(userId);
-
-    }
 
     @Test
     void getAllByOwnerId_WithoutPagination_StateCurrent() {
@@ -639,6 +610,7 @@ class BookingServiceImplTest {
         bookings.add(new Booking());
         Page<Booking> bookingPage = new PageImpl<>(bookings);
 
+        Mockito.when(userRepository.findById(Long.valueOf(userId))).thenReturn(Optional.of(new User()));
         Mockito.when(bookingRepository.findAllByOwnerIdWithPagination(userId, PageRequest.of(Math.toIntExact(start), Math.toIntExact(size), Sort.by("start_date").descending())))
                 .thenReturn(bookingPage);
 

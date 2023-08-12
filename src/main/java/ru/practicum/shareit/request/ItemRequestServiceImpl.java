@@ -7,7 +7,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.DataNotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.ItemRepository;
@@ -28,12 +27,12 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public ItemRequestDto addNewItemRequest(long userId, ItemRequestDto itemRequestDto) {
+        validateUserId(userId);
         //маппинг
         ItemRequestMapper mapper = Mappers.getMapper(ItemRequestMapper.class);
         ItemRequest itemRequest = mapper.itemRequestDtoToItemRequest(itemRequestDto);
         itemRequest.setRequester(userRepository.findById(userId));
         itemRequest.setCreated(LocalDateTime.now().withNano(0).plusSeconds(1));
-        validateWithExceptions(itemRequest);
 
         itemRequestRepository.save(itemRequest);
 
@@ -43,37 +42,31 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public List<ItemRequestDto> getAllByOwnerId(long ownerId) {
+
         validateUserId(ownerId);
         List<ItemRequest> requestsFromRepo = itemRequestRepository.findAllByOwnerId(ownerId);
         List<ItemRequestDto> requestsDto = new ArrayList<>();
         ItemRequestMapper mapper = Mappers.getMapper(ItemRequestMapper.class);
+        ItemMapper itemMapper = Mappers.getMapper(ItemMapper.class);
 
+        List<Item> items = itemRepository.findAllWithRequestId();
         for (ItemRequest request : requestsFromRepo) {
             ItemRequestDto requestDto = mapper.itemRequestToItemRequestDto(request);
 
             //проверка есть ли ответы(предметы) у запроса
-            List<Item> items = itemRepository.findAllByRequestId(requestDto.getId());
-            if (items.size() >= 1) {
-                ItemMapper itemMapper = Mappers.getMapper(ItemMapper.class);
-                for (Item item : items) {
+            for (Item item : items) {
+                if (request.getId() == item.getItemRequest().getId()) {
                     requestDto.getItems().add(itemMapper.itemToItemDtoWithRequestId(item));
                 }
             }
 
             requestsDto.add(requestDto);
         }
-
-
         return requestsDto;
     }
 
     @Override
     public List<ItemRequestDto> getAllWithPagination(long userId, Long from, Long size) {
-        //если параметры не передали
-        if (from == null || size == null) {
-            return new ArrayList<ItemRequestDto>();
-        }
-        validateFromSize(from, size);
 
         long start = from / size;
         List<ItemRequest> requests = itemRequestRepository.getAllWithPagination(userId,
@@ -81,13 +74,15 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
         List<ItemRequestDto> requestsDto = new ArrayList<>();
         ItemRequestMapper mapper = Mappers.getMapper(ItemRequestMapper.class);
+        ItemMapper itemMapper = Mappers.getMapper(ItemMapper.class);
+
+        List<Item> items = itemRepository.findAllWithRequestId();
         for (ItemRequest request : requests) {
             ItemRequestDto requestDto = mapper.itemRequestToItemRequestDto(request);
+
             //проверка есть ли ответы(предметы) у запроса
-            List<Item> items = itemRepository.findAllByRequestId(requestDto.getId());
-            if (items.size() >= 1) {
-                ItemMapper itemMapper = Mappers.getMapper(ItemMapper.class);
-                for (Item item : items) {
+            for (Item item : items) {
+                if (request.getId() == item.getItemRequest().getId()) {
                     requestDto.getItems().add(itemMapper.itemToItemDtoWithRequestId(item));
                 }
             }
@@ -118,15 +113,6 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
 
-    private void validateWithExceptions(ItemRequest itemRequest) {
-        if (itemRequest.getRequester() == null) {
-            throw new DataNotFoundException("Пользователь не найден");
-        }
-        if (itemRequest.getDescription().isEmpty()) {
-            throw new ValidationException("Ошибка валидации нового запроса");
-        }
-    }
-
     private void validateRequestId(Long requestId) {
         if (!itemRequestRepository.findById(requestId).isPresent() || requestId < 0) {
             throw new DataNotFoundException("Предмет с таким id не найден");
@@ -139,9 +125,4 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         }
     }
 
-    private void validateFromSize(Long from, Long size) {
-        if (from == 0 && size == 0 || from < 0 || size < 0) {
-            throw new ValidationException("Ошибка в параметрах from или size. from = " + from + ", size = " + size);
-        }
-    }
 }

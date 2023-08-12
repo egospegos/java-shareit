@@ -3,7 +3,6 @@ package ru.practicum.shareit.item;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-
 import java.util.List;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
@@ -19,6 +18,10 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query(value = " select i.id, i.name, i.description, i.is_available, i.owner_id, i.request_id from Items as i " +
             "where i.request_id = ?1 ", nativeQuery = true)
     List<Item> findAllByRequestId(long requestId);
+
+    @Query(value = " select i.id, i.name, i.description, i.is_available, i.owner_id, i.request_id from Items as i " +
+            "where i.request_id IS NOT NULL ", nativeQuery = true)
+    List<Item> findAllWithRequestId();
 
 
     @Query(value = " select i.id, i.name, i.description, i.is_available, i.owner_id, i.request_id from Items as i " +

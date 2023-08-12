@@ -12,7 +12,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.exception.DataNotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.user.User;
@@ -23,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -57,6 +55,7 @@ class ItemRequestServiceImplTest {
         request.setCreated(LocalDateTime.now().withNano(0).plusSeconds(1));
 
 
+        when(userRepository.findById(Long.valueOf(userId))).thenReturn(Optional.of(user));
         when(userRepository.findById(userId)).thenReturn(user);
         when(itemRequestRepository.save(request)).thenReturn(request);
 
@@ -67,53 +66,6 @@ class ItemRequestServiceImplTest {
 
     }
 
-    @Test
-    void addNewItemRequest_whenRequesterIsNull() {
-        long userId = 1;
-        User user = new User();
-        user.setId(userId);
-        user.setName("name");
-        user.setEmail("mail@mail.ru");
-
-        ItemRequestDto requestDto = new ItemRequestDto();
-        requestDto.setDescription("description");
-
-        ItemRequest request = requestMapper.itemRequestDtoToItemRequest(requestDto);
-        request.setRequester(user);
-        request.setCreated(LocalDateTime.now().withNano(0).plusSeconds(1));
-
-
-        when(userRepository.findById(userId)).thenReturn(null);
-
-
-        assertThrows(DataNotFoundException.class,
-                () -> itemRequestService.addNewItemRequest(userId, requestDto));
-
-    }
-
-    @Test
-    void addNewItemRequest_whenDescriptionIsEmpty() {
-        long userId = 1;
-        User user = new User();
-        user.setId(userId);
-        user.setName("name");
-        user.setEmail("mail@mail.ru");
-
-        ItemRequestDto requestDto = new ItemRequestDto();
-        requestDto.setDescription("");
-
-        ItemRequest request = requestMapper.itemRequestDtoToItemRequest(requestDto);
-        request.setRequester(user);
-        request.setCreated(LocalDateTime.now().withNano(0).plusSeconds(1));
-
-
-        when(userRepository.findById(userId)).thenReturn(user);
-
-
-        assertThrows(ValidationException.class,
-                () -> itemRequestService.addNewItemRequest(userId, requestDto));
-
-    }
 
     @Test
     void getAllByOwnerId() {
@@ -137,7 +89,7 @@ class ItemRequestServiceImplTest {
 
         when(userRepository.findById(Long.valueOf(ownerId))).thenReturn(Optional.of(owner));
         when(itemRequestRepository.findAllByOwnerId(ownerId)).thenReturn(ownerRequests);
-        when(itemRepository.findAllByRequestId(1L)).thenReturn(itemsForRequest);
+        when(itemRepository.findAllWithRequestId()).thenReturn(itemsForRequest);
 
         List<ItemRequestDto> actualRequests = itemRequestService.getAllByOwnerId(ownerId);
 
@@ -173,72 +125,13 @@ class ItemRequestServiceImplTest {
 
         when(itemRequestRepository.getAllWithPagination(userId, PageRequest.of(Math.toIntExact(start), Math.toIntExact(size), Sort.by("created").descending())))
                 .thenReturn(requestPage);
-
-        when(itemRepository.findAllByRequestId(requestId)).thenReturn(itemsForRequest);
+        when(itemRepository.findAllWithRequestId()).thenReturn(itemsForRequest);
 
         List<ItemRequestDto> actualRequests = itemRequestService.getAllWithPagination(userId, from, size);
 
         Mockito.verify(itemRequestRepository).getAllWithPagination(userId, PageRequest.of(Math.toIntExact(start), Math.toIntExact(size), Sort.by("created").descending()));
     }
 
-    @Test
-    void getAllWithPagination_InvalidFromAndSize() {
-        long from = 0L;
-        long size = 0L;
-        long userId = 1L;
-        User user = new User();
-        user.setId(userId);
-
-        long requestId = 1L;
-        ItemRequest itemRequest = new ItemRequest();
-        itemRequest.setId(requestId);
-
-        long itemId = 3L;
-        Item item = new Item();
-        item.setId(itemId);
-        item.setItemRequest(itemRequest);
-
-        List<ItemRequest> ownerRequests = new ArrayList<>();
-        ownerRequests.add(itemRequest);
-
-        List<Item> itemsForRequest = new ArrayList<>();
-        itemsForRequest.add(item);
-
-        Page<ItemRequest> requestPage = new PageImpl<>(ownerRequests);
-
-        assertThrows(ValidationException.class,
-                () -> itemRequestService.getAllWithPagination(userId, from, size));
-
-    }
-
-    @Test
-    void getAllWithPagination_WhenFromAndSizeNull() {
-        Long from = null;
-        Long size = null;
-        long userId = 1L;
-        User user = new User();
-        user.setId(userId);
-
-        long requestId = 1L;
-        ItemRequest itemRequest = new ItemRequest();
-        itemRequest.setId(requestId);
-
-        long itemId = 3L;
-        Item item = new Item();
-        item.setId(itemId);
-        item.setItemRequest(itemRequest);
-
-        List<ItemRequest> ownerRequests = new ArrayList<>();
-        ownerRequests.add(itemRequest);
-
-        List<Item> itemsForRequest = new ArrayList<>();
-        itemsForRequest.add(item);
-
-        Page<ItemRequest> requestPage = new PageImpl<>(ownerRequests);
-
-        List<ItemRequestDto> list = itemRequestService.getAllWithPagination(userId, from, size);
-        assertEquals(0, list.size());
-    }
 
     @Test
     void getItemRequestById() {

@@ -1,8 +1,6 @@
 package ru.practicum.shareit.booking;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import ru.practicum.shareit.item.ItemForBookingDto;
 import ru.practicum.shareit.user.UserForBookingDto;
 import ru.practicum.shareit.util.common.Marker;
@@ -13,9 +11,7 @@ import java.time.LocalDateTime;
 /**
  * TODO Sprint add-bookings.
  */
-@Getter
-@Setter
-@EqualsAndHashCode
+@Data
 public class BookingDto {
     private Long id;
     private long itemId;

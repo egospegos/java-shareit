@@ -108,63 +108,42 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingDto> getAllByUserId(long userId, String state, Long from, Long size) {
 
-        //если параметры не передали
-        if (from == null || size == null) {
+        validateUserId(userId);
+        validateState(state);
 
-            validateUserId(userId);
-            validateState(state);
-
-            List<Booking> bookings = new ArrayList<>();
-            if (state.equals("ALL")) {
-                bookings = bookingRepository.findAllByBookerId(userId);
-            }
-            if (state.equals("CURRENT")) {
-                bookings = bookingRepository.findCurrentByBookerId(userId);
-            }
-            if (state.equals("PAST")) {
-                bookings = bookingRepository.findPastByBookerId(userId);
-            }
-            if (state.equals("FUTURE")) {
-                bookings = bookingRepository.findFutureByBookerId(userId);
-            }
-            if (state.equals("REJECTED")) {
-
-                bookings = bookingRepository.findRejectedByBookerId(userId);
-            }
-            if (state.equals("WAITING")) {
-                bookings = bookingRepository.findWaitingByBookerId(userId);
-            }
-
-            BookingMapper mapper = Mappers.getMapper(BookingMapper.class);
-            List<BookingDto> bookingsDto = new ArrayList<>();
-            for (Booking booking : bookings) {
-                BookingDto bookingDto = mapper.bookingToBookingDto(booking);
-                bookingDto.setItem(Mappers.getMapper(ItemMapper.class).itemToItemForBookingDto(booking.getItem()));
-                bookingDto.setBooker(Mappers.getMapper(UserMapper.class).userToUserForBookingDto(booking.getBooker()));
-                bookingsDto.add(bookingDto);
-            }
-
-            return bookingsDto;
-
-        } else {
-
-            validateFromSize(from, size);
-
+        List<Booking> bookings = new ArrayList<>();
+        if (state.equals("ALL")) {
             long start = from / size;
-            List<Booking> bookings = bookingRepository.findAllByBookerIdWithPagination(userId,
+            bookings = bookingRepository.findAllByBookerIdWithPagination(userId,
                     PageRequest.of(Math.toIntExact(start), Math.toIntExact(size), Sort.by("start_date").descending())).getContent();
-
-            BookingMapper mapper = Mappers.getMapper(BookingMapper.class);
-            List<BookingDto> bookingsDto = new ArrayList<>();
-            for (Booking booking : bookings) {
-                BookingDto bookingDto = mapper.bookingToBookingDto(booking);
-                bookingDto.setItem(Mappers.getMapper(ItemMapper.class).itemToItemForBookingDto(booking.getItem()));
-                bookingDto.setBooker(Mappers.getMapper(UserMapper.class).userToUserForBookingDto(booking.getBooker()));
-                bookingsDto.add(bookingDto);
-            }
-
-            return bookingsDto;
         }
+        if (state.equals("CURRENT")) {
+            bookings = bookingRepository.findCurrentByBookerId(userId);
+        }
+        if (state.equals("PAST")) {
+            bookings = bookingRepository.findPastByBookerId(userId);
+        }
+        if (state.equals("FUTURE")) {
+            bookings = bookingRepository.findFutureByBookerId(userId);
+        }
+        if (state.equals("REJECTED")) {
+
+            bookings = bookingRepository.findRejectedByBookerId(userId);
+        }
+        if (state.equals("WAITING")) {
+            bookings = bookingRepository.findWaitingByBookerId(userId);
+        }
+
+        BookingMapper mapper = Mappers.getMapper(BookingMapper.class);
+        List<BookingDto> bookingsDto = new ArrayList<>();
+        for (Booking booking : bookings) {
+            BookingDto bookingDto = mapper.bookingToBookingDto(booking);
+            bookingDto.setItem(Mappers.getMapper(ItemMapper.class).itemToItemForBookingDto(booking.getItem()));
+            bookingDto.setBooker(Mappers.getMapper(UserMapper.class).userToUserForBookingDto(booking.getBooker()));
+            bookingsDto.add(bookingDto);
+        }
+
+        return bookingsDto;
 
 
     }
@@ -172,59 +151,42 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingDto> getAllByOwnerId(long ownerId, String state, Long from, Long size) {
 
-        //если параметры не передали
-        if (from == null || size == null) {
-            validateUserId(ownerId);
-            validateState(state);
 
-            List<Booking> bookings = new ArrayList<>();
-            if (state.equals("ALL")) {
-                bookings = bookingRepository.findAllByOwnerId(ownerId);
-            }
-            if (state.equals("CURRENT")) {
-                bookings = bookingRepository.findCurrentByOwnerId(ownerId);
-            }
-            if (state.equals("PAST")) {
-                bookings = bookingRepository.findPastByOwnerId(ownerId);
-            }
-            if (state.equals("FUTURE")) {
-                bookings = bookingRepository.findFutureByOwnerId(ownerId);
-            }
-            if (state.equals("REJECTED")) {
-                bookings = bookingRepository.findRejectedByOwnerId(ownerId);
-            }
-            if (state.equals("WAITING")) {
-                bookings = bookingRepository.findWaitingByOwnerId(ownerId);
-            }
+        validateUserId(ownerId);
+        validateState(state);
 
-            BookingMapper mapper = Mappers.getMapper(BookingMapper.class);
-            List<BookingDto> bookingsDto = new ArrayList<>();
-            for (Booking booking : bookings) {
-                BookingDto bookingDto = mapper.bookingToBookingDto(booking);
-                bookingDto.setItem(Mappers.getMapper(ItemMapper.class).itemToItemForBookingDto(booking.getItem()));
-                bookingDto.setBooker(Mappers.getMapper(UserMapper.class).userToUserForBookingDto(booking.getBooker()));
-                bookingsDto.add(bookingDto);
-            }
-
-            return bookingsDto;
-        } else {
-            validateFromSize(from, size);
-
+        List<Booking> bookings = new ArrayList<>();
+        if (state.equals("ALL")) {
             long start = from / size;
-            List<Booking> bookings = bookingRepository.findAllByOwnerIdWithPagination(ownerId,
+            bookings = bookingRepository.findAllByOwnerIdWithPagination(ownerId,
                     PageRequest.of(Math.toIntExact(start), Math.toIntExact(size), Sort.by("start_date").descending())).getContent();
-
-            BookingMapper mapper = Mappers.getMapper(BookingMapper.class);
-            List<BookingDto> bookingsDto = new ArrayList<>();
-            for (Booking booking : bookings) {
-                BookingDto bookingDto = mapper.bookingToBookingDto(booking);
-                bookingDto.setItem(Mappers.getMapper(ItemMapper.class).itemToItemForBookingDto(booking.getItem()));
-                bookingDto.setBooker(Mappers.getMapper(UserMapper.class).userToUserForBookingDto(booking.getBooker()));
-                bookingsDto.add(bookingDto);
-            }
-
-            return bookingsDto;
         }
+        if (state.equals("CURRENT")) {
+            bookings = bookingRepository.findCurrentByOwnerId(ownerId);
+        }
+        if (state.equals("PAST")) {
+            bookings = bookingRepository.findPastByOwnerId(ownerId);
+        }
+        if (state.equals("FUTURE")) {
+            bookings = bookingRepository.findFutureByOwnerId(ownerId);
+        }
+        if (state.equals("REJECTED")) {
+            bookings = bookingRepository.findRejectedByOwnerId(ownerId);
+        }
+        if (state.equals("WAITING")) {
+            bookings = bookingRepository.findWaitingByOwnerId(ownerId);
+        }
+
+        BookingMapper mapper = Mappers.getMapper(BookingMapper.class);
+        List<BookingDto> bookingsDto = new ArrayList<>();
+        for (Booking booking : bookings) {
+            BookingDto bookingDto = mapper.bookingToBookingDto(booking);
+            bookingDto.setItem(Mappers.getMapper(ItemMapper.class).itemToItemForBookingDto(booking.getItem()));
+            bookingDto.setBooker(Mappers.getMapper(UserMapper.class).userToUserForBookingDto(booking.getBooker()));
+            bookingsDto.add(bookingDto);
+        }
+
+        return bookingsDto;
 
 
     }
@@ -270,9 +232,4 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-    private void validateFromSize(Long from, Long size) {
-        if (from == 0 && size == 0 || from < 0 || size < 0) {
-            throw new ValidationException("Ошибка в параметрах from или size. from = " + from + ", size = " + size);
-        }
-    }
 }

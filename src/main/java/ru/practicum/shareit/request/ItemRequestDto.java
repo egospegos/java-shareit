@@ -16,9 +16,10 @@ import java.util.List;
  */
 @Getter
 @Setter
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ItemRequestDto {
 
+    @EqualsAndHashCode.Include
     private Long id;
     @NotBlank(groups = {Marker.OnCreate.class})
     private String description;

@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.util.common.Marker;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 /**
@@ -48,7 +50,8 @@ public class BookingController {
     @GetMapping
     public List<BookingDto> getAllByUserId(@RequestHeader("X-Sharer-User-Id") Long userId,
                                            @RequestParam(defaultValue = "ALL") String state,
-                                           @RequestParam(required = false) Long from, @RequestParam(required = false) Long size) {
+                                           @RequestParam(defaultValue = "0") @PositiveOrZero Long from,
+                                           @RequestParam(defaultValue = "10") @Positive Long size) {
         return bookingService.getAllByUserId(userId, state, from, size);
     }
 
@@ -56,7 +59,8 @@ public class BookingController {
     @GetMapping("/owner")
     public List<BookingDto> getAllByOwnerId(@RequestHeader("X-Sharer-User-Id") Long ownerId,
                                             @RequestParam(defaultValue = "ALL") String state,
-                                            @RequestParam(required = false) Long from, @RequestParam(required = false) Long size) {
+                                            @RequestParam(defaultValue = "0") @PositiveOrZero Long from,
+                                            @RequestParam(defaultValue = "10") @Positive Long size) {
         return bookingService.getAllByOwnerId(ownerId, state, from, size);
     }
 

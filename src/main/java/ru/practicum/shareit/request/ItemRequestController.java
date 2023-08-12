@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.util.common.Marker;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 /**
@@ -39,7 +41,8 @@ public class ItemRequestController {
     //получить список запросов, созданных другими пользователями
     @GetMapping("/all")
     public List<ItemRequestDto> getAllWithPagination(@RequestHeader(value = "X-Sharer-User-Id") Long userId,
-                                                     @RequestParam(required = false) Long from, @RequestParam(required = false) Long size) {
+                                                     @RequestParam(defaultValue = "0") @PositiveOrZero Long from,
+                                                     @RequestParam(defaultValue = "10") @Positive Long size) {
         return itemRequestService.getAllWithPagination(userId, from, size);
     }
 
