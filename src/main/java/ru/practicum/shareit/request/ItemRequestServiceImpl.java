@@ -15,6 +15,7 @@ import ru.practicum.shareit.user.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional
@@ -55,7 +56,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
             //проверка есть ли ответы(предметы) у запроса
             for (Item item : items) {
-                if (request.getId() == item.getItemRequest().getId()) {
+                if (Objects.equals(request.getId(), item.getItemRequest().getId())) {
                     requestDto.getItems().add(itemMapper.itemToItemDtoWithRequestId(item));
                 }
             }
@@ -82,7 +83,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
             //проверка есть ли ответы(предметы) у запроса
             for (Item item : items) {
-                if (request.getId() == item.getItemRequest().getId()) {
+                if (Objects.equals(request.getId(), item.getItemRequest().getId())) {
                     requestDto.getItems().add(itemMapper.itemToItemDtoWithRequestId(item));
                 }
             }
