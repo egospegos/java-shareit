@@ -2,7 +2,10 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import org.mapstruct.factory.Mappers;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.DataNotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.Item;
@@ -11,7 +14,6 @@ import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.UserRepository;
 
-import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,14 +106,16 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getAllByUserId(long userId, String state) {
+    public List<BookingDto> getAllByUserId(long userId, String state, Long from, Long size) {
 
         validateUserId(userId);
         validateState(state);
 
         List<Booking> bookings = new ArrayList<>();
         if (state.equals("ALL")) {
-            bookings = bookingRepository.findAllByBookerId(userId);
+            long start = from / size;
+            bookings = bookingRepository.findAllByBookerIdWithPagination(userId,
+                    PageRequest.of(Math.toIntExact(start), Math.toIntExact(size), Sort.by("start_date").descending())).getContent();
         }
         if (state.equals("CURRENT")) {
             bookings = bookingRepository.findCurrentByBookerId(userId);
@@ -140,17 +144,22 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return bookingsDto;
+
+
     }
 
     @Override
-    public List<BookingDto> getAllByOwnerId(long ownerId, String state) {
+    public List<BookingDto> getAllByOwnerId(long ownerId, String state, Long from, Long size) {
+
 
         validateUserId(ownerId);
         validateState(state);
 
         List<Booking> bookings = new ArrayList<>();
         if (state.equals("ALL")) {
-            bookings = bookingRepository.findAllByOwnerId(ownerId);
+            long start = from / size;
+            bookings = bookingRepository.findAllByOwnerIdWithPagination(ownerId,
+                    PageRequest.of(Math.toIntExact(start), Math.toIntExact(size), Sort.by("start_date").descending())).getContent();
         }
         if (state.equals("CURRENT")) {
             bookings = bookingRepository.findCurrentByOwnerId(ownerId);
@@ -178,6 +187,8 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return bookingsDto;
+
+
     }
 
     private void validateItem(Item item) {
@@ -220,4 +231,5 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException("Unknown state: " + state);
         }
     }
+
 }

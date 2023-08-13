@@ -3,14 +3,15 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import org.mapstruct.factory.Mappers;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.exception.DataNotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.UserRepository;
 
-import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository itemRequestRepository;
 
 
     @Override
@@ -110,10 +112,19 @@ public class ItemServiceImpl implements ItemService {
         //маппинг
         ItemMapper mapper = Mappers.getMapper(ItemMapper.class);
         Item item = mapper.itemDtoToItem(itemDto);
+
+        if (itemDto.getRequestId() != 0) {
+            item.setItemRequest(itemRequestRepository.findById(itemDto.getRequestId()));
+            item.setOwner(userRepository.findById(userId));
+            validateWithExceptions(item);
+            itemRepository.save(item);
+            //маппинг перед отправкой на контроллер
+            return mapper.itemToItemDtoWithRequestId(item);
+        }
+
         item.setOwner(userRepository.findById(userId));
         validateWithExceptions(item);
         itemRepository.save(item);
-
         //маппинг перед отправкой на контроллер
         return mapper.itemToItemDto(item);
 
@@ -137,9 +148,6 @@ public class ItemServiceImpl implements ItemService {
         }
         if (item.getAvailable() == null) {
             item.setAvailable(itemRepository.findById(itemId).getAvailable());
-        }
-        if (item.getOwner() == null) {
-            item.setOwner(itemRepository.findById(itemId).getOwner());
         }
         itemRepository.save(item);
         //маппинг перед отправкой на контроллер
@@ -184,7 +192,7 @@ public class ItemServiceImpl implements ItemService {
         Comment comment = mapper.commentDtoToComment(commentDto);
         comment.setItem(itemRepository.findById(itemId));
         comment.setAuthor(userRepository.findById(userId));
-        comment.setCreated(LocalDateTime.now());
+        comment.setCreated(LocalDateTime.now().withNano(0).plusSeconds(1));
 
         //маппинг перед отправкой назад
         return mapper.commentToCommentDto(commentRepository.save(comment));

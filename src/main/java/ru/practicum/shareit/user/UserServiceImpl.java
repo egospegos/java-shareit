@@ -37,6 +37,7 @@ public class UserServiceImpl implements UserService {
     public UserDto get(long userId) {
         validateId(userId);
         UserMapper mapper = Mappers.getMapper(UserMapper.class);
+        User actual = userRepository.findById(userId);
         return mapper.userToUserDto(userRepository.findById(userId));
     }
 
@@ -70,7 +71,6 @@ public class UserServiceImpl implements UserService {
         //маппинг
         UserMapper mapper = Mappers.getMapper(UserMapper.class);
         User user = mapper.userDtoToUser(userDto);
-        validateId(id);
         validateWithExceptionsOnUpdate(id, user);
         return mapper.userToUserDto(userRepository.save(user));
     }
@@ -82,24 +82,18 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void validateId(Long id) {
-        if (!userRepository.findById(id).isPresent() || id < 0) {
+    private void validateId(long id) {
+
+        if (!userRepository.findById(Long.valueOf(id)).isPresent() || id < 0) {
             throw new DataNotFoundException("Пользователь с таким id не найден");
         }
     }
 
-    private void validateWithExceptions(User user) {
-        if (userRepository.findAllEmails().contains(user.getEmail())) {
-            throw new DublicateException("Ошибка добавления существующего email");
-        }
-    }
 
     private void validateWithExceptionsOnUpdate(long id, User user) {
-        if (user.getEmail() != null) {
-            if (!user.getEmail().equals(userRepository.findById(id).getEmail())) {
-                if (userRepository.findAllEmails().contains(user.getEmail())) { //если такой майл уже есть в других
-                    throw new DublicateException("Ошибка добавления существующего email");
-                }
+        if (!user.getEmail().equals(userRepository.findById(id).getEmail())) {
+            if (userRepository.findAllEmails().contains(user.getEmail())) { //если такой майл уже есть в других
+                throw new DublicateException("Ошибка добавления существующего email");
             }
         }
     }
