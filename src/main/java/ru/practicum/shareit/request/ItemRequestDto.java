@@ -1,7 +1,6 @@
 package ru.practicum.shareit.request;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import ru.practicum.shareit.item.ItemDto;
 import ru.practicum.shareit.util.common.Marker;
 
