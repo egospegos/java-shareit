@@ -1,8 +1,7 @@
 package ru.practicum.shareit.request;
 
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import ru.practicum.shareit.item.ItemDto;
 import ru.practicum.shareit.util.common.Marker;
 
@@ -14,12 +13,9 @@ import java.util.List;
 /**
  * TODO Sprint add-item-requests.
  */
-@Getter
-@Setter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Data
 public class ItemRequestDto {
 
-    @EqualsAndHashCode.Include
     private Long id;
     @NotBlank(groups = {Marker.OnCreate.class})
     private String description;

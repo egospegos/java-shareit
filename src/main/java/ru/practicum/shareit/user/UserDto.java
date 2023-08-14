@@ -1,16 +1,12 @@
 package ru.practicum.shareit.user;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import ru.practicum.shareit.util.common.Marker;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
-@Getter
-@Setter
-@EqualsAndHashCode
+@Data
 public class UserDto {
     private Long id;
     @NotBlank(groups = {Marker.OnCreate.class})
