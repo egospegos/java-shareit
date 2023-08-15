@@ -198,21 +198,18 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void validateItemId(Long itemId) {
-        if (!itemRepository.findById(itemId).isPresent() || itemId < 0) {
-            throw new DataNotFoundException("Предмет с таким id не найден");
-        }
+        itemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalStateException("Wrong item id=" + itemId));
     }
 
     private void validateUserId(Long userId) {
-        if (!userRepository.findById(userId).isPresent() || userId < 0) {
-            throw new DataNotFoundException("Пользователь с таким id не найден");
-        }
+        userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("Wrong user id=" + userId));
     }
 
     private void validateBookingId(Long bookingId) {
-        if (!bookingRepository.findById(bookingId).isPresent() || bookingId < 0) {
-            throw new DataNotFoundException("Бронирование с таким id не найдено");
-        }
+        bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalStateException("Wrong booking id=" + bookingId));
     }
 
     private void validateDateTime(LocalDateTime start, LocalDateTime end) {

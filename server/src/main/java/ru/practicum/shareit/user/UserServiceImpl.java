@@ -82,11 +82,9 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void validateId(long id) {
-
-        if (!userRepository.findById(Long.valueOf(id)).isPresent() || id < 0) {
-            throw new DataNotFoundException("Пользователь с таким id не найден");
-        }
+    private void validateId(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("Wrong user id=" + userId));
     }
 
 

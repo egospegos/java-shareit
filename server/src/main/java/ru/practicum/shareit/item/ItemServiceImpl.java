@@ -200,9 +200,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void validateItemId(Long itemId) {
-        if (!itemRepository.findById(itemId).isPresent() || itemId < 0) {
-            throw new DataNotFoundException("Предмет с таким id не найден");
-        }
+        itemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalStateException("Wrong item id=" + itemId));
     }
 
     private void validateUserId(long itemId, long userId) {

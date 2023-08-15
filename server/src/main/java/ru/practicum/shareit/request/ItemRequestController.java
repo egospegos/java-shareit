@@ -1,7 +1,6 @@
 package ru.practicum.shareit.request;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.List;
 /**
  * TODO Sprint add-item-requests.
  */
-@Validated
 @RestController
 @RequestMapping(path = "/requests")
 public class ItemRequestController {

@@ -6,7 +6,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.exception.DataNotFoundException;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.ItemRepository;
@@ -115,15 +114,13 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
 
     private void validateRequestId(Long requestId) {
-        if (!itemRequestRepository.findById(requestId).isPresent() || requestId < 0) {
-            throw new DataNotFoundException("Предмет с таким id не найден");
-        }
+        itemRequestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalStateException("Wrong itemRequest id=" + requestId));
     }
 
     private void validateUserId(Long userId) {
-        if (!userRepository.findById(userId).isPresent() || userId < 0) {
-            throw new DataNotFoundException("Пользователь с таким id не найден");
-        }
+        userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("Wrong user id=" + userId));
     }
 
 }

@@ -2,9 +2,7 @@ package ru.practicum.shareit.request;
 
 import lombok.Data;
 import ru.practicum.shareit.item.ItemDto;
-import ru.practicum.shareit.util.common.Marker;
 
-import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +14,7 @@ import java.util.List;
 public class ItemRequestDto {
 
     private Long id;
-    @NotBlank(groups = {Marker.OnCreate.class})
+
     private String description;
 
     private LocalDateTime created;
